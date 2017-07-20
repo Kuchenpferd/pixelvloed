@@ -1,11 +1,21 @@
 #!/usr/bin/python
-"""This is an udp / binary client
+"""This is the client for Pixelvloed
 
-Inspired by the PixelFlut projector on eth0:winter 2016 and
-code from https://github.com/defnull/pixelflut/
+https://github.com/janklopper/pixelvloed
+
+We've given you an example of a function that randomly places randomly colored
+pixels somewhere on the screen.
+
+# Copy the function RandomFill,
+# give it a new name by replacing the word "RandomFill" By your own name
+# Think of your own creative pixel packages.
+
+Then you can run the client with the -e flag (for effect)
+
+./client.py -e MyColorPusher
 """
 
-__version__ = 0.3
+__version__ = 0.4
 __author__ = "Jan Klopper <jan@underdark.nl>"
 
 import random
@@ -13,9 +23,7 @@ from vloed import PixelVloedClient, Packet, RGBPixel, MAX_PIXELS
 
 def RandomFill(screen, width, height):
   """Generates a random number of pixels with a random color"""
-  for _x in xrange(1, # at least one pixel
-                   random.randint(10, MAX_PIXELS) # at most the max number of pixels
-                   ):
+  for _x in xrange(1, MAX_PIXELS): # lets loop over the amount of pixels
     pixel = RGBPixel(random.randint(0, width), # select a random position on the width of the screen
                      random.randint(0, height), # select a random position on the height of the screen
                      random.randint(0, 255), # select a random value for red
@@ -26,7 +34,6 @@ def RandomFill(screen, width, height):
 
 def RunClient(options):
   """Discover the servers and start sending to the first one"""
-
   client = PixelVloedClient(True, # start as soon as we find a server
                             options.debug, # show debugging output
                             options.ip, # ip of the server, None for autodetect
@@ -38,28 +45,40 @@ def RunClient(options):
   # Lets create a screen which buffers the pixels we add to it, and sends them to the actual screen.
   screen = Packet(client)
   # loop the effect until we cancel by pressing ctrl+c / exit the program
+
+  # we run the effect that has been given trough the -e flag.
+  # This defaults to RandomFill
+  if options.effect:
+    effect = locals()[options.effect]
+  else:
+    effect = RandomFill
+
   while screen:
 
     # add some pixels to the screen with our functions
     # the width/height are read from the client's config
-    RandomFill(screen, client.width, client.height)
+    effect(screen, client.width, client.height)
 
 if __name__ == '__main__':
   # if this script is called from the command line, and thus not imported
   # start a client and start sending messages
   import optparse
   parser = optparse.OptionParser()
-  parser.add_option('-v', action="store_true", dest="debug", default=False)
-  parser.add_option('-i', action="store", dest="ip", default=None)
-  parser.add_option('-p', action="store", dest="port", default=None,
-                    type="int")
+  parser.add_option('-v', action="store_true", dest="debug", default=False, 
+                    help="Enable debugging output")
+  parser.add_option('-i', action="store", dest="ip", default=None,
+                    help="Ip of the server, leave empty for auto-discovery")
+  parser.add_option('-p', action="store", dest="port", default=None, type="int",
+                    help="Port of the server, leave empty for default")
   parser.add_option('-x', action="store", dest="width", default=None,
-                    type="int")
+                    type="int", help="Width of the server's screen")
   parser.add_option('-y', action="store", dest="height", default=None,
-                    type="int")
+                    type="int", help="Height of the server's screen")
+  parser.add_option('-e', action="store", dest="effect", default=None,
+                    type="str", help="Which effect to run.")
   options, remainder = parser.parse_args()
 
   try:
     RunClient(options)
   except KeyboardInterrupt:
-    print 'Closing client'
+    print('Closing client')
