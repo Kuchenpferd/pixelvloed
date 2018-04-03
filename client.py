@@ -46,25 +46,18 @@ def RunClient(options):
   screen = Packet(client)
   # loop the effect until we cancel by pressing ctrl+c / exit the program
 
-  # we run the effect that has been given trough the -e flag.
-  # This defaults to RandomFill
-  if options.effect:
-    effect = locals()[options.effect]
-  else:
-    effect = RandomFill
-
   while screen:
 
     # add some pixels to the screen with our functions
     # the width/height are read from the client's config
-    effect(screen, client.width, client.height)
+    options.effect(screen, client.width, client.height)
 
 if __name__ == '__main__':
   # if this script is called from the command line, and thus not imported
   # start a client and start sending messages
   import optparse
   parser = optparse.OptionParser()
-  parser.add_option('-v', action="store_true", dest="debug", default=False, 
+  parser.add_option('-v', action="store_true", dest="debug", default=False,
                     help="Enable debugging output")
   parser.add_option('-i', action="store", dest="ip", default=None,
                     help="Ip of the server, leave empty for auto-discovery")
@@ -74,9 +67,13 @@ if __name__ == '__main__':
                     type="int", help="Width of the server's screen")
   parser.add_option('-y', action="store", dest="height", default=None,
                     type="int", help="Height of the server's screen")
-  parser.add_option('-e', action="store", dest="effect", default=None,
+  parser.add_option('-e', action="store", dest="effect", default='RandomFill',
                     type="str", help="Which effect to run.")
   options, remainder = parser.parse_args()
+
+  # we run the effect that has been given trough the -e flag.
+  # This defaults to RandomFill
+  options.effect = locals()[options.effect]
 
   try:
     RunClient(options)
